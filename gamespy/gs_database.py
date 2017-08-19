@@ -433,7 +433,11 @@ class GamespyDatabase(object):
     def pending(self,postdata):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM pending WHERE macadr = ?",(postdata['macadr'],))
-            return int(row[0]) > 0
+            #return int(row[0]) > 0
+            result = int(row[0])
+            if result == 0:
+                tx.nonquery("INSERT INTO pending (macadr) VALUES (?)", (postdata['macadr'],))
+            return result > 0
     def registered(self,postdata):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM registered WHERE macadr = ?",(postdata['macadr'],))
