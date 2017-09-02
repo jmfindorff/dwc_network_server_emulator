@@ -54,7 +54,8 @@ class StatsPage(resource.Resource):
 
         if raw == True:
             # List of keys to be removed
-            restricted = [ "publicip", "__session__", "localip0", "localip1" ]
+            
+            restricted = [ "__session__", "localip0", "localip1" ]
 
             # Filter out certain fields before displaying raw data
             if server_list != None:
