@@ -179,6 +179,14 @@ class NasHTTPServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             "locator": "gamespy.com",
                             "retry": "1",
                         }
+                    elif not self.server.db.allowed_games(post):
+                        logger.log(logging.DEBUG, "Login denied - game not supported!"+str(post))
+                        ret = {
+                            "datetime": time.strftime("%Y%m%d%H%M%S"),
+                            "returncd": "3800",
+                            "locator": "gamespy.com",
+                            "retry": "1",
+                        }
                     else:
                         challenge = utils.generate_random_str(8)
                         post["challenge"] = challenge
