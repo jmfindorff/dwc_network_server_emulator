@@ -194,6 +194,25 @@ class NasHTTPServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             "locator": "gamespy.com",
                             "retry": "1",
                         }
+                    #elif self.server.db.noname
+                        #logger.log(logging.DEBUG, "login denied for banned Mii name"+str(post))
+                        #ret = {
+                            #"datetime": time.strftime("%Y%m%d%H%M%S"),
+                            #"returncd": "3916",
+                            #"locator": "gamespy.com",
+                            #"retry": "1",
+                            #"reason": "Mii name is black listed"
+                        #}
+                    # Work in progress to ban IP subnets
+                    #elif self.server.db.banned_16_subnet(post):
+                        #logger.log(logging.DEBUG, "Login denied - Subnet banned"str(post))
+                        #ret = {
+                            #"datetime": time.strftime("%Y%m%d%H%M%S"),
+                            #"returncd": "3916",
+                            #"locator": "gamespy.com",
+                            #"retry": "1",
+                            #"reason": "/16 IP subnet banned."
+                        #}
                     else:
                         challenge = utils.generate_random_str(8)
                         post["challenge"] = challenge
