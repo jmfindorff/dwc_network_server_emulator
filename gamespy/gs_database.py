@@ -124,7 +124,7 @@ class GamespyDatabase(object):
             tx.nonquery("CREATE TABLE IF NOT EXISTS pending (macadr TEXT, csnum TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS registered (macadr TEXT, csnum TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS allowed_games (gamecd TEXT)")
-            tx.nonquery("CREATE TABLE IF NOT EXISTS profile_banned (userid TEXT, gsbrcd TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
+            tx.nonquery("CREATE TABLE IF NOT EXISTS profile_banned (gsbrcd TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
             
             # Create some indexes for performance.
             tx.nonquery("CREATE UNIQUE INDEX IF NOT EXISTS gamestatprofile_triple on gamestat_profile(profileid,dindex,ptype)")
@@ -474,7 +474,7 @@ class GamespyDatabase(object):
     def is_profile_banned(self,postdata):
         if 'gsbrcd' in postdata:
             with Transaction (self.conn) as tx:
-                row = tx.queryone("SELECT COUNT(*) FROM profile_banned WHERE userid = ? AND gsbrcd = ? AND ubtime > ?",(postdata['userid'],postdata['gsbrcd'],time.time(),))
+                row = tx.queryone("SELECT COUNT(*) FROM profile_banned WHERE gsbrcd = ? AND ubtime > ?",(postdata['gsbrcd'],time.time(),))
                 return int(row[0]) > 0
         else:
             return False
