@@ -471,7 +471,7 @@ class GamespyDatabase(object):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM allowed_games WHERE gamecd = ?",(postdata['gamecd'][:3],))
             return int(row[0]) > 0
-    def is_profile_banned(self.postdata):
+    def is_profile_banned(self,postdata):
     if 'gsbrcd' in postdata:
         with Transaction (self.conn) ast tx:
         row = tx.queryone("SELECT COUNT(*) FROM profiler_banned WHERE userid = ? AND gsbrcd = ? AND ubtime > ?",(postdata['userid'],postdata['gsbrcd'],time.time(),))
