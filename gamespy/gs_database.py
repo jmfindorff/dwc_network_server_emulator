@@ -124,7 +124,7 @@ class GamespyDatabase(object):
             tx.nonquery("CREATE TABLE IF NOT EXISTS pending (macadr TEXT, csnum TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS registered (macadr TEXT, csnum TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS allowed_games (gamecd TEXT)")
-            tx.nonquery("CREATE TABLE IF NOT EXISTS banned_16_subnet (ipaddr TEXT")
+            tx.nonquery("CREATE TABLE IF NOT EXISTS profile_banned (userid TEXT, gsbrcd TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
             
             # Create some indexes for performance.
             tx.nonquery("CREATE UNIQUE INDEX IF NOT EXISTS gamestatprofile_triple on gamestat_profile(profileid,dindex,ptype)")
@@ -405,15 +405,6 @@ class GamespyDatabase(object):
             return None
         else:
             return json.loads(r["data"])
-    def noname
-    # The idea here is to check if ingamesn 'no name' is used on login.
-    # If it is, prevent the login from happening. This is a work in progress
-    # Code below will not work more than likely. It's just a rough sketch.
-        ingamesn = gs_utils.base64_decode(ingamesn)
-        if 'ingamesn' in postdata == 'no name':
-            return True
-        else:
-            return False
 
     def is_ip_banned(self,postdata):
         with Transaction(self.conn) as tx:
@@ -480,8 +471,13 @@ class GamespyDatabase(object):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM allowed_games WHERE gamecd = ?",(postdata['gamecd'][:3],))
             return int(row[0]) > 0
-    def banned_16_subnet(self.postdata):
-    # Inswert stuff here to check if a subnet is banned
+    def is_profile_banned(self.postdata):
+    if 'gsbrcd' in postdata:
+        with Transaction (self.conn) ast tx:
+        row = tx.queryone("SELECT COUNT(*) FROM profiler_banned WHERE userid = ? AND gsbrcd = ? AND ubtime > ?",(postdata['userid'],postdata['gsbrcd'],time.time(),))
+        return int(row[0]) > 0
+    else:
+        return False
 
     def console_abuse(self,postdata): # ONLY FOR WII CONSOLES
       if 'csnum' in postdata:
