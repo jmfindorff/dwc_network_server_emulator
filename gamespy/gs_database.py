@@ -486,7 +486,7 @@ class GamespyDatabase(object):
              row = tx.queryone("SELECT COUNT(*) FROM registered WHERE csnum = ?",(postdata['csnum'],))
              #return int(row[0]) > 0
              result = int(row[0])
-             if result > 1:
+             if result > 2:
                 return True
              else:
                 return False
