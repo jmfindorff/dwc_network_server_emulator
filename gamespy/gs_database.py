@@ -493,6 +493,17 @@ class GamespyDatabase(object):
              
       else:
          return False
+
+    def mkw_specific(self,postdata):
+        with Transaction(self.conn) as tx:
+            row = tx.queryone("SELECT * FROM allowed_games WHERE gamecd = ?",(postdata['gamecd'][:3],))
+            result = (row[0])
+            if result == "RMC":
+                if 'csnum' and 'cfc' in postdata:
+                    return True
+                else:
+                    return False
+
         
     def get_next_available_userid(self):
         with Transaction(self.conn) as tx:
