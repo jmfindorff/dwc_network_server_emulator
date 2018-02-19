@@ -203,14 +203,14 @@ class NasHTTPServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             "locator": "gamespy.com",
                             "retry": "1",
                         }
-#                    elif not self.server.db.mkw_specific(post):
-#                        logger.log(logging.DEBUG, "Login denied for Mario Kart Wii - incomplete identifiers!"+str(post))
-#                        ret = {
-#                            "datetime": time.strftime("%Y%m%d%H%M%S"),
-#                            "returncd": "2222",
-#                            "locator": "gamespy.com",
-#                            "retry": "1",
-#                        }
+                    elif not self.server.db.mkw_specific(post):
+                        logger.log(logging.DEBUG, "Login denied for Mario Kart Wii - incomplete identifiers!"+str(post))
+                        ret = {
+                            "datetime": time.strftime("%Y%m%d%H%M%S"),
+                            "returncd": "2222",
+                            "locator": "gamespy.com",
+                            "retry": "1",
+                        }
                     elif not self.server.db.valid_mac(post):
                         logger.log(logging.DEBUG, "Login denied because MAC is not a valid length"+str(post))
                         ret = {
