@@ -494,6 +494,9 @@ class GamespyDatabase(object):
       else:
          return False
 
+    #def mac_length(self,postdata):
+        #return len(postdata["macadr"]) == 12
+
     def mkw_specific(self,postdata):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT * FROM allowed_games WHERE gamecd = ?",(postdata['gamecd'][:3],))
