@@ -494,8 +494,8 @@ class GamespyDatabase(object):
       else:
          return False
 
-    #def mac_length(self,postdata):
-        #return len(postdata["macadr"]) == 12
+    def valid_mac(self,postdata):
+        return len(postdata["macadr"]) == 12
 
     def mkw_specific(self,postdata):
         with Transaction(self.conn) as tx:

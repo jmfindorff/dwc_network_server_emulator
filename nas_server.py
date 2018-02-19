@@ -211,14 +211,14 @@ class NasHTTPServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             "locator": "gamespy.com",
                             "retry": "1",
                         }
-                    #elif not self.server.db.mac_length(post):
-                        #logger.log(logging.DEBUG, "Login denied because MAC is not a valid length"+str(post))
-                        #ret = {
-                            #"datetime": time.strftime("%Y%m%d%H%M%S"),
-                            #"returncd": "3915",
-                            #"locator": "gamespy.com",
-                            #"retry": "1",
-                        #}
+                    elif not self.server.db.valid_mac(post):
+                        logger.log(logging.DEBUG, "Login denied because MAC is not a valid length"+str(post))
+                        ret = {
+                            "datetime": time.strftime("%Y%m%d%H%M%S"),
+                            "returncd": "3915",
+                            "locator": "gamespy.com",
+                            "retry": "1",
+                        }
                     else:
                         challenge = utils.generate_random_str(8)
                         post["challenge"] = challenge
