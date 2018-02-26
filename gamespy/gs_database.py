@@ -117,6 +117,7 @@ class GamespyDatabase(object):
             tx.nonquery("CREATE TABLE IF NOT EXISTS gamestat_profile (profileid INT, dindex TEXT, ptype TEXT, data TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS gameinfo (profileid INT, dindex TEXT, ptype TEXT, data TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS nas_logins (userid TEXT, authtoken TEXT, data TEXT)")
+            tx.nonquery("CREATE TABLE IF NOT EXISTS ap_banned (bssid TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
             tx.nonquery("CREATE TABLE IF NOT EXISTS ip_banned (ipaddr TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
             tx.nonquery("CREATE TABLE IF NOT EXISTS console_macadr_banned (macadr TEXT, timestamp INT(11), reason TEXT, ubtime INT(11))")
             tx.nonquery("CREATE TABLE IF NOT EXISTS console_csnum_banned (csnum TEXT)")
@@ -405,6 +406,12 @@ class GamespyDatabase(object):
             return None
         else:
             return json.loads(r["data"])
+
+    def is_ap_banned(self,postdata):
+      if 'bssid' in postdata:
+         with Transaction(self.conn) as tx:
+            row = tx.queryone("SELECT COUNT(*) FROM ap_banned WHERE bssid = ? AND ubtime > ?",(postdata['bssid'],time.time(),))
+            return int(row[0]) > 0
 
     def is_ip_banned(self,postdata):
         with Transaction(self.conn) as tx:

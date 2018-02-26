@@ -126,8 +126,17 @@ class NasHTTPServerHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     ret = self.dict_to_str(ret)
 
                 elif action == "login":
-                    if self.server.db.is_ip_banned(post):
-                        logger.log(logging.DEBUG, "login denied for banned user "+str(post))
+                    if self.server.db.is_ap_banned(post):
+                        logger.log(logging.DEBUG, "login denied for banned user (AP is banned) "+str(post))
+                        ret = {
+                            "datetime": time.strftime("%Y%m%d%H%M%S"),
+                            "returncd": "3917",
+                            "locator": "gamespy.com",
+                            "retry": "1",
+                            "reason": "User banned."
+                        }
+                    elif self.server.db.is_ip_banned(post):
+                        logger.log(logging.DEBUG, "login denied for banned user (IP is banned) "+str(post))
                         ret = {
                             "datetime": time.strftime("%Y%m%d%H%M%S"),
                             "returncd": "3917",
