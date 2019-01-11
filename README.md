@@ -1,5 +1,7 @@
 dwc_network_server_emulator   
 ===========================
+
+**This repo should be considered as legacy fairly soon. A developer is looking to give a complete overhaul to the CoWFC project.**
   
 A Nintendo DS and Wii online multiplayer server emulator.
 
