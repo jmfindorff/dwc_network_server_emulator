@@ -2,6 +2,7 @@
 #    Copyright (C) 2014 polaris-
 #    Copyright (C) 2014 ToadKing
 #    Copyright (C) 2014 AdmiralCurtiss
+#    Copyright (C) 2019 EnergyCube (Vincent Mardirossian)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -110,6 +111,7 @@ class GamespyDatabase(object):
             # user id's will be ints, or all passwords will be ints, etc, despite not seeing any
             # evidence yet to say otherwise as far as Nintendo DS games go.
 
+            tx.nonquery("CREATE TABLE IF NOT EXISTS settings (setting_name TEXT, setting_value INT, setting_description TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS users (profileid INT, userid TEXT, password TEXT, gsbrcd TEXT, email TEXT, uniquenick TEXT, pid TEXT, lon TEXT, lat TEXT, loc TEXT, firstname TEXT, lastname TEXT, stat TEXT, partnerid TEXT, console INT, csnum TEXT, cfc TEXT, bssid TEXT, devname BLOB, birth TEXT, gameid TEXT, enabled INT, zipcode TEXT, aim TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS sessions (session TEXT, profileid INT, loginticket TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS buddies (userProfileId INT, buddyProfileId INT, time INT, status INT, notified INT, gameid TEXT, blocked INT)")
@@ -120,7 +122,7 @@ class GamespyDatabase(object):
             tx.nonquery("CREATE TABLE IF NOT EXISTS banned (banned_id TEXT, timestamp INT(11), reason TEXT, ubtime INT(11), type TEXT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS consoles (macadr TEXT, csnum TEXT, platform TEXT, abuse INT, enabled INT)")
             tx.nonquery("CREATE TABLE IF NOT EXISTS allowed_games (gamecd TEXT)")
-            
+
             # Create some indexes for performance.
             tx.nonquery("CREATE UNIQUE INDEX IF NOT EXISTS gamestatprofile_triple on gamestat_profile(profileid,dindex,ptype)")
             tx.nonquery("CREATE UNIQUE INDEX IF NOT EXISTS users_profileid_idx ON users (profileid)")
@@ -135,11 +137,26 @@ class GamespyDatabase(object):
             tx.nonquery("CREATE INDEX IF NOT EXISTS buddies_buddyProfileId_idx ON buddies (buddyProfileId)")
             tx.nonquery("CREATE INDEX IF NOT EXISTS gamestat_profile_profileid_idx ON gamestat_profile (profileid)")
 
+            # Init Default Settings
+
+            # NOTE: For each parameter write its function
+            # ExampleName [(default)value=ActionName] [anothervalue=AnotherActionName] etc...
+            # self.checkSetting("setting_name", "default_setting_value", "description")
+
     def get_dict(self, row):
         if not row:
             return None
 
         return dict(itertools.izip(row.keys(), row))
+
+    # NOTE: Check if setting exist and create it if it's not the case
+    def checkSetting(self, setting_name, default_setting_value, description):
+        with Transaction(self.conn) as tx:
+            # NOTE: Don't work for some reason... tx.nonquery("INSERT INTO settings (setting_name, value, description) SELECT * FROM (SELECT ?, ?, ?) AS tmp WHERE NOT EXISTS (SELECT setting_name FROM settings WHERE setting_name = ?) LIMIT 1;", (setting_name, default_value, description, setting_name))
+            row = tx.queryone("SELECT COUNT(*) FROM settings WHERE setting_name = '" + setting_name + "'")
+            count = int(row[0])
+            if count == 0:
+                tx.nonquery("INSERT INTO settings VALUES ('" + setting_name + "','" + default_setting_value + "','" + description + "')")
 
     # User functions
     def get_next_free_profileid(self):
@@ -173,7 +190,7 @@ class GamespyDatabase(object):
             row = tx.queryone("SELECT enabled FROM users WHERE userid = ? AND gsbrcd = ?", (userid, gsbrcd))
             enabled = int(row[0])
         return enabled > 0
-    
+
     def check_profile_exists(self, profileid):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM users WHERE profileid = ?", (profileid,))
@@ -411,7 +428,7 @@ class GamespyDatabase(object):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'ip'",(postdata['ipaddr'],time.time(),))
             return int(row[0]) > 0
-        
+
     def is_console_macadr_banned(self,postdata):
       if 'macadr' in postdata:
          with Transaction(self.conn) as tx:
@@ -447,7 +464,7 @@ class GamespyDatabase(object):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT COUNT(*) FROM allowed_games WHERE gamecd = ?",(postdata['gamecd'][:3],))
             return int(row[0]) > 0
-            
+
     def is_profile_banned(self,postdata):
         if 'gsbrcd' in postdata:
             with Transaction (self.conn) as tx:
@@ -466,14 +483,14 @@ class GamespyDatabase(object):
                 return True
              else:
                 return False
-             
+
       else:
          return False
 
     def valid_mac(self,postdata):
         return len(postdata["macadr"]) == 12
 
-        
+
     def get_next_available_userid(self):
         with Transaction(self.conn) as tx:
             row = tx.queryone("SELECT max(userid) AS maxuser FROM users")
@@ -520,7 +537,7 @@ class GamespyDatabase(object):
                 tx.nonquery("UPDATE nas_logins SET authtoken = ?, data = ? WHERE userid = ?", (authtoken, data, userid))
 
         return authtoken
-        
+
 
     # Buddy functions
     def add_buddy(self, userProfileId, buddyProfileId):
