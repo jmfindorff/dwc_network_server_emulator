@@ -139,9 +139,8 @@ class GamespyDatabase(object):
 
             # Init Default Settings
 
-            # NOTE: For each parameter write its function
-            # ExampleName [(default)value=ActionName] [anothervalue=AnotherActionName] etc...
-            # self.checkSetting("setting_name", "default_setting_value", "description")
+            # Manual Console Activation [(default)0=Auto Console Activation] [1=Manual Console Activation]
+            self.checkSetting("console_manualactivation", "0", "When enabled, makes manual console activation instead of automatically")
 
     def get_dict(self, row):
         if not row:
@@ -437,23 +436,32 @@ class GamespyDatabase(object):
       else:
          return False
 
+    # (?,?,?,'X',?) X => 1 to a 0 to enable manual console activation
     def console_register(self,postdata):
-      if 'csnum' in postdata:
-         with Transaction(self.conn) as tx:
-             row = tx.queryone("SELECT COUNT(*) FROM consoles WHERE macadr = ? and platform = 'wii'",(postdata['macadr'],))
-             result = int(row[0])
-             if result == 0:
-                 # Change the 1 to a 0 to require manual console activation
-                 tx.nonquery("INSERT INTO consoles (macadr, csnum, platform, enabled, abuse) VALUES (?,?,'wii','1','0')", (postdata['macadr'], postdata['csnum']))
-             return result > 0
-      else:
-         with Transaction(self.conn) as tx:
-             row = tx.queryone("SELECT COUNT(*) FROM consoles WHERE macadr = ? and platform = 'other'",(postdata['macadr'],))
-             result = int(row[0])
-             if result == 0:
-                 # Change the 1 to a 0 to require manual console activation
-                 tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','1','0')", (postdata['macadr'],))
-             return result > 0
+        if 'csnum' in postdata:
+            with Transaction(self.conn) as tx:
+                row = tx.queryone("SELECT COUNT(*) FROM consoles WHERE macadr = ? and platform = 'wii'",(postdata['macadr'],))
+                result = int(row[0])
+                if result == 0:
+                    row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'console_manualactivation'")
+                    result_ = int(row_[0])
+                    if result_ == 0:
+                        tx.nonquery("INSERT INTO consoles (macadr, csnum, platform, enabled, abuse) VALUES (?,?,'wii','1','0')", (postdata['macadr'], postdata['csnum']))
+                    if result_ == 1:
+                        tx.nonquery("INSERT INTO consoles (macadr, csnum, platform, enabled, abuse) VALUES (?,?,'wii','0','0')", (postdata['macadr'], postdata['csnum']))
+            return result > 0
+        else:
+            with Transaction(self.conn) as tx:
+                row = tx.queryone("SELECT COUNT(*) FROM consoles WHERE macadr = ? and platform = 'other'",(postdata['macadr'],))
+                result = int(row[0])
+                if result == 0:
+                    row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'console_manualactivation'")
+                    result_ = int(row_[0])
+                if result_ == 0:
+                    tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','1','0')", (postdata['macadr'],))
+                if result_ == 1:
+                    tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','0','0')", (postdata['macadr'],))
+            return result > 0
 
     def pending_console(self,postdata):
         with Transaction(self.conn) as tx:
