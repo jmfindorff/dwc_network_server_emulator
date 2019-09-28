@@ -2,7 +2,7 @@
 #    Copyright (C) 2014 polaris-
 #    Copyright (C) 2014 ToadKing
 #    Copyright (C) 2014 AdmiralCurtiss
-#    Copyright (C) 2019 EnergyCube (Vincent Mardirossian)
+#    Copyright (C) 2019 EnergyCube
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -141,6 +141,15 @@ class GamespyDatabase(object):
 
             # Manual Console Activation [(default)0=Auto Console Activation] [1=Manual Console Activation]
             self.checkSetting("console_manualactivation", "0", "When enabled, makes manual console activation instead of automatically")
+
+            # Allow Banned IP Address [(default)0=Refuse Connection] [1=Allow Connection]
+            self.checkSetting("ip_allowbanned", "0", "When enabled, allow banned ip address to connect to the server")
+
+            # Allow Banned MAC Address [(default)0=Refuse Connection] [1=Allow Connection]
+            self.checkSetting("mac_allowbanned", "0", "When enabled, allow banned MAC address to connect to the server")
+
+            # Allow Banned Profiles Address [(default)0=Refuse Connection] [1=Allow Connection]
+            self.checkSetting("profile_allowbanned", "0", "When enabled, allow banned profiles to connect to the server")
 
     def get_dict(self, row):
         if not row:
@@ -418,23 +427,33 @@ class GamespyDatabase(object):
             return json.loads(r["data"])
 
     def is_ap_banned(self,postdata):
-      if 'bssid' in postdata:
-         with Transaction(self.conn) as tx:
-            row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'ap'",(postdata['bssid'],time.time(),))
-            return int(row[0]) > 0
+        if 'bssid' in postdata:
+            with Transaction(self.conn) as tx:
+                row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'ap'",(postdata['bssid'],time.time(),))
+                return int(row[0]) > 0
 
     def is_ip_banned(self,postdata):
         with Transaction(self.conn) as tx:
-            row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'ip'",(postdata['ipaddr'],time.time(),))
-            return int(row[0]) > 0
+            row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'ip_allowbanned'")
+            result_ = int(row_[0])
+            if result_ == 0:
+                row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'ip'",(postdata['ipaddr'],time.time(),))
+                return int(row[0]) > 0
+            if result_ == 1:
+                return 0
 
     def is_console_macadr_banned(self,postdata):
-      if 'macadr' in postdata:
-         with Transaction(self.conn) as tx:
-            row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? and type = 'console'",(postdata['macadr'],time.time(),))
-            return int(row[0]) > 0
-      else:
-         return False
+        if 'macadr' in postdata:
+            with Transaction(self.conn) as tx:
+                row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'mac_allowbanned'")
+                result_ = int(row_[0])
+                if result_ == 0:
+                    row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? and type = 'console'",(postdata['macadr'],time.time(),))
+                    return int(row[0]) > 0
+                if result_ == 1:
+                    return 0
+        else:
+            return False
 
     # (?,?,?,'X',?) X => 1 to a 0 to enable manual console activation
     def console_register(self,postdata):
@@ -457,10 +476,10 @@ class GamespyDatabase(object):
                 if result == 0:
                     row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'console_manualactivation'")
                     result_ = int(row_[0])
-                if result_ == 0:
-                    tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','1','0')", (postdata['macadr'],))
-                if result_ == 1:
-                    tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','0','0')", (postdata['macadr'],))
+                    if result_ == 0:
+                        tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','1','0')", (postdata['macadr'],))
+                    if result_ == 1:
+                        tx.nonquery("INSERT INTO consoles (macadr, platform, enabled, abuse) VALUES (?,'other','0','0')", (postdata['macadr'],))
             return result > 0
 
     def pending_console(self,postdata):
@@ -476,8 +495,13 @@ class GamespyDatabase(object):
     def is_profile_banned(self,postdata):
         if 'gsbrcd' in postdata:
             with Transaction (self.conn) as tx:
-                row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'profile'",(postdata['gsbrcd'],time.time(),))
-                return int(row[0]) > 0
+                row_ = tx.queryone("SELECT setting_value from settings WHERE setting_name = 'profile_allowbanned'")
+                result_ = int(row_[0])
+                if result_ == 0:
+                    row = tx.queryone("SELECT COUNT(*) FROM banned WHERE banned_id = ? AND ubtime > ? AND type = 'profile'",(postdata['gsbrcd'],time.time(),))
+                    return int(row[0]) > 0
+                if result_ == 1:
+                    return 0
         else:
             return False
 
